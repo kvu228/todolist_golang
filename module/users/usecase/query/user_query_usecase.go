@@ -3,28 +3,28 @@ package query
 import (
 	"context"
 	"github.com/google/uuid"
-	"to_do_list/module/users/domain"
+	"to_do_list/module/users/infrastructure/repositories/mysql"
 )
 
 type UserQueryUseCase interface {
-	GetUser(ctx context.Context, id uuid.UUID) (*domain.UserDTO, error)
-	ListUsersByIds(ctx context.Context, ids []uuid.UUID) ([]*domain.UserDTO, error)
+	GetUser(ctx context.Context, id uuid.UUID) (*mysql.UserDTO, error)
+	ListUsersByIds(ctx context.Context, ids []uuid.UUID) ([]*mysql.UserDTO, error)
 }
 
 type userQueryUseCase struct {
-	*listUserByIdsUseCase
-	*getUserUseCase
+	ListUserByIdsUseCase
+	GetUserUseCase
 }
 
 func NewUserQueryUseCase(userQueryRepository UserQueryRepository) *userQueryUseCase {
 	return &userQueryUseCase{
-		listUserByIdsUseCase: NewListUserByIdsUseCase(userQueryRepository),
-		getUserUseCase:       NewGetUserUseCase(userQueryRepository)}
+		ListUserByIdsUseCase: NewListUserByIdsUseCase(userQueryRepository),
+		GetUserUseCase:       NewGetUserUseCase(userQueryRepository)}
 }
 
 // Repositories interfaces
 type UserQueryRepository interface {
-	FindById(ctx context.Context, id uuid.UUID) (user *domain.UserDTO, err error)
-	FindByEmail(ctx context.Context, email string) (user *domain.UserDTO, err error)
-	FindByIds(ctx context.Context, ids []uuid.UUID) (uses []*domain.UserDTO, err error)
+	FindById(ctx context.Context, id uuid.UUID) (user *mysql.UserDTO, err error)
+	FindByEmail(ctx context.Context, email string) (user *mysql.UserDTO, err error)
+	FindByIds(ctx context.Context, ids []uuid.UUID) (uses []*mysql.UserDTO, err error)
 }

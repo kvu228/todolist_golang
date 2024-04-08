@@ -5,13 +5,12 @@ import (
 	"errors"
 	"to_do_list/common"
 	"to_do_list/module/users/domain"
+	"to_do_list/module/users/usecase"
 	"to_do_list/module/users/usecase/query"
 )
 
-type Hasher interface {
-	RandomString(length int) (string, error)
-	HashPassword(salt string, password string) (string, error)
-	CheckPassword(salt string, password string, hashPassword string) bool
+type RegisterUseCase interface {
+	Register(ctx context.Context, dto usecase.EmailPasswordRegistrationDTO) error
 }
 
 type registerUseCase struct {
@@ -20,10 +19,10 @@ type registerUseCase struct {
 	hasher                Hasher
 }
 
-func NewRegisterUseCase(userCommandRepository UserCmdRepository, userQueryRepository query.UserQueryRepository, hasher Hasher) *registerUseCase {
+func NewRegisterUseCase(userCommandRepository UserCmdRepository, userQueryRepository query.UserQueryRepository, hasher Hasher) RegisterUseCase {
 	return &registerUseCase{userCommandRepository: userCommandRepository, userQueryRepository: userQueryRepository, hasher: hasher}
 }
-func (uc *registerUseCase) Register(ctx context.Context, dto domain.EmailPasswordRegistrationDTO) error {
+func (uc *registerUseCase) Register(ctx context.Context, dto usecase.EmailPasswordRegistrationDTO) error {
 
 	user, err := uc.userQueryRepository.FindByEmail(ctx, dto.Email)
 	if user != nil {

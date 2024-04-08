@@ -18,7 +18,7 @@ func NewUserMySQLRepo(db *gorm.DB) *userMySQLRepo {
 }
 
 func (u *userMySQLRepo) Create(ctx context.Context, user *domain.User) error {
-	dto := domain.UserDTO{
+	dto := UserDTO{
 		Id:        user.Id(),
 		FirstName: user.FirstName(),
 		LastName:  user.LastName(),
@@ -41,28 +41,28 @@ func (u *userMySQLRepo) Update(ctx context.Context, user *domain.User) error {
 }
 
 func (u *userMySQLRepo) Delete(ctx context.Context, id uuid.UUID) error {
-	if err := u.db.Table(common.TbNameUsers).Where("id = ?", id).Delete(&domain.UserDTO{}).Error; err != nil {
+	if err := u.db.Table(common.TbNameUsers).Where("id = ?", id).Delete(&UserDTO{}).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func (u *userMySQLRepo) FindById(ctx context.Context, id uuid.UUID) (user *domain.UserDTO, err error) {
-	user = &domain.UserDTO{}
+func (u *userMySQLRepo) FindById(ctx context.Context, id uuid.UUID) (user *UserDTO, err error) {
+	user = &UserDTO{}
 	if err := u.db.Table(common.TbNameUsers).Where("id = ?", id).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return user, nil
 }
 
-func (u *userMySQLRepo) FindByIds(ctx context.Context, ids []uuid.UUID) (uses []*domain.UserDTO, err error) {
+func (u *userMySQLRepo) FindByIds(ctx context.Context, ids []uuid.UUID) (uses []*UserDTO, err error) {
 	if err := u.db.Table(common.TbNameUsers).Where("id IN (?)", ids).Find(&uses).Error; err != nil {
 		return nil, err
 	}
 	return uses, nil
 }
 
-func (u *userMySQLRepo) FindByEmail(ctx context.Context, email string) (user *domain.UserDTO, err error) {
+func (u *userMySQLRepo) FindByEmail(ctx context.Context, email string) (user *UserDTO, err error) {
 	if err := u.db.Table(common.TbNameUsers).Where("email = ?", email).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, common.ErrRecordNotFound
@@ -72,7 +72,7 @@ func (u *userMySQLRepo) FindByEmail(ctx context.Context, email string) (user *do
 	return user, nil
 }
 
-func (u *userMySQLRepo) FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []domain.OwnerDTO, err error) {
+func (u *userMySQLRepo) FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []OwnerDTO, err error) {
 
 	if err := u.db.Table(common.TbNameUsers).Where("id IN (?)", ids).Find(&owners).Error; err != nil {
 		return nil, err

@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"to_do_list/common"
+	components "to_do_list/component"
 	PostMySQL "to_do_list/module/post/infrastructure/repositories/mysql"
 	PostHTTP "to_do_list/module/post/infrastructure/services/http"
 	UserMySQL "to_do_list/module/users/infrastructure/repositories/mysql"
@@ -27,9 +28,12 @@ func main() {
 
 	server := gin.Default()
 	v1 := server.Group("/api/v1")
+	secretKey := os.Getenv("JWT_SECRET")
+	tokenProvider := components.NewJWTProvider(secretKey, 60*60*24*7, 60*60*24*14)
 	userRepo := UserMySQL.NewUserMySQLRepo(db)
 	userQueryUC := query.NewUserQueryUseCase(userRepo)
-	userCmdUC := command.NewUserCmdUseCase(userRepo, &common.Hasher{})
+	sessionRepo := UserMySQL.NewSessionMySQLRepo(db)
+	userCmdUC := command.NewUserCmdUseCase(userRepo, sessionRepo, tokenProvider, &common.Hasher{})
 	UserHTTP.NewHttpUserService(userQueryUC, userCmdUC).Routes(v1)
 
 	postRepo := PostMySQL.NewPostsMySQLRepo(db)

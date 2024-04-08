@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
-	"to_do_list/module/users/domain"
+	"to_do_list/module/users/usecase"
 	"to_do_list/module/users/usecase/command"
 	"to_do_list/module/users/usecase/query"
 )
@@ -74,7 +74,7 @@ func (s *httpUserService) listUsers() gin.HandlerFunc {
 
 func (s *httpUserService) handleRegister() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var dto domain.EmailPasswordRegistrationDTO
+		var dto usecase.EmailPasswordRegistrationDTO
 		if err := c.BindJSON(&dto); err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -91,8 +91,29 @@ func (s *httpUserService) handleRegister() gin.HandlerFunc {
 	}
 }
 
+func (s *httpUserService) handleLogin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var dto usecase.EmailPasswordLoginDTO
+		if err := c.BindJSON(&dto); err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		result, err := s.userCmdUseCase.LoginEmailPassword(c.Request.Context(), dto)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"data": result,
+		})
+
+	}
+}
+
 func (s *httpUserService) Routes(g *gin.RouterGroup) {
 	g.POST("/register", s.handleRegister())
+	g.POST("/authenticate", s.handleLogin())
 
 	user := g.Group("/user")
 	user.GET("/:id", s.getUser())
