@@ -13,7 +13,7 @@ type userMySQLRepo struct {
 	db *gorm.DB
 }
 
-func NewUserMySQLRepo(db *gorm.DB) *userMySQLRepo {
+func NewUserMySQLRepo(db *gorm.DB) UserRepository {
 	return &userMySQLRepo{db: db}
 }
 
@@ -78,4 +78,22 @@ func (u *userMySQLRepo) FindWithIds(ctx context.Context, ids []uuid.UUID) (owner
 		return nil, err
 	}
 	return owners, nil
+}
+
+type UserRepository interface {
+	UserCmdRepository
+	UserQueryRepository
+}
+
+type UserCmdRepository interface {
+	Create(ctx context.Context, user *domain.User) error
+	Update(ctx context.Context, user *domain.User) error
+	Delete(ctx context.Context, id uuid.UUID) error
+}
+
+type UserQueryRepository interface {
+	FindById(ctx context.Context, id uuid.UUID) (user *UserDTO, err error)
+	FindByIds(ctx context.Context, ids []uuid.UUID) (uses []*UserDTO, err error)
+	FindByEmail(ctx context.Context, email string) (user *UserDTO, err error)
+	FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []OwnerDTO, err error)
 }

@@ -9,4 +9,7 @@ const (
 	//Len of salts
 	LenSalt         = 30
 	LenRefreshToken = 30
+
+	// Keys
+	KeyRequester = "requester"
 )
