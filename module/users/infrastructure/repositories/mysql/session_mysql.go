@@ -25,6 +25,19 @@ func (s *sessionMySQLRepo) Find(ctx context.Context, id uuid.UUID) (session *dom
 	return dto.ToEntity()
 }
 
+func (s *sessionMySQLRepo) FindByRefreshToken(ctx context.Context, refreshToken string) (session *domain.Session, err error) {
+	var dto SessionDTO
+	err = s.db.Table(common.TbNameSessions).Where("refresh_token = ?", refreshToken).First(&dto).Error
+	if err != nil {
+		return nil, err
+	}
+	return dto.ToEntity()
+}
+
+func (s *sessionMySQLRepo) Delete(ctx context.Context, id uuid.UUID) error {
+	return s.db.Table(common.TbNameSessions).Where("id = ?", id).Delete(&SessionDTO{}).Error
+}
+
 func (s *sessionMySQLRepo) Create(ctx context.Context, session *domain.Session) error {
 	dto := SessionDTO{
 		Id:                session.Id(),
@@ -47,8 +60,10 @@ type SessionRepository interface {
 
 type SessionQueryRepository interface {
 	Find(ctx context.Context, id uuid.UUID) (session *domain.Session, err error)
+	FindByRefreshToken(ctx context.Context, refreshToken string) (session *domain.Session, err error)
 }
 
 type SessionCmdRepository interface {
 	Create(ctx context.Context, session *domain.Session) error
+	Delete(ctx context.Context, id uuid.UUID) error
 }

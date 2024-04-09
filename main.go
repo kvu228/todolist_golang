@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"os"
+	"strconv"
 	"to_do_list/common"
 	components "to_do_list/component"
 	"to_do_list/middlewares"
@@ -32,7 +33,10 @@ func main() {
 
 	//Setup Dependencies
 	secretKey := os.Getenv("JWT_SECRET")
-	tokenProvider := components.NewJWTProvider(secretKey, 60*60*24*7, 60*60*24*14)
+	expTokenIn, _ := strconv.Atoi(os.Getenv("JWT_EXPIRATION_TIME"))
+	expRefreshTokenIn, _ := strconv.Atoi(os.Getenv("JWT_REFRESH_TOKEN_TIME"))
+
+	tokenProvider := components.NewJWTProvider(secretKey, expTokenIn, expRefreshTokenIn)
 	userRepo := UserMySQLRepo.NewUserMySQLRepo(db)
 	userQueryUC := UserQueryUC.NewUserQueryUseCase(userRepo)
 	sessionRepo := UserMySQLRepo.NewSessionMySQLRepo(db)
