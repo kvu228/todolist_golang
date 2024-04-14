@@ -33,7 +33,7 @@ type userCmdUseCase struct {
 	LoginEmailPasswordUseCase
 }
 
-func NewUserCmdUseCase(userRepository UserRepository, sessionCmdRepository SessionCmdRepository, tokenProvider TokenProvider, hasher Hasher) *userCmdUseCase {
+func NewUserCmdUseCase(userRepository UserRepository, sessionCmdRepository SessionCmdRepository, tokenProvider TokenProvider, hasher Hasher) UserCmdUseCase {
 	return &userCmdUseCase{
 		RegisterUseCase:           NewRegisterUseCase(userRepository, userRepository, hasher),
 		LoginEmailPasswordUseCase: NewLoginEmailPasswordUseCase(userRepository, sessionCmdRepository, tokenProvider, hasher),

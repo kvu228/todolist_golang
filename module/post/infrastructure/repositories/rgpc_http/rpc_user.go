@@ -9,7 +9,7 @@ import (
 	"log"
 	"net/http"
 	"time"
-	"to_do_list/module/post/domain"
+	"to_do_list/module/post/usecase"
 )
 
 type rpcGetUsersByIds struct {
@@ -20,7 +20,7 @@ func NewRpcGetUsersByIds(url string) *rpcGetUsersByIds {
 	return &rpcGetUsersByIds{url: url}
 }
 
-func (r *rpcGetUsersByIds) FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []domain.OwnerDTO, err error) {
+func (r *rpcGetUsersByIds) FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []usecase.OwnerDTO, err error) {
 	url := r.url
 	method := "POST"
 
@@ -57,7 +57,7 @@ func (r *rpcGetUsersByIds) FindWithIds(ctx context.Context, ids []uuid.UUID) (ow
 	}
 
 	var responseData struct {
-		Data []domain.OwnerDTO `json:"data"`
+		Data []usecase.OwnerDTO `json:"data"`
 	}
 
 	if err := json.Unmarshal(body, &responseData); err != nil {

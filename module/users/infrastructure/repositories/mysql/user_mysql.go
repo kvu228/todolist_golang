@@ -73,7 +73,6 @@ func (u *userMySQLRepo) FindByEmail(ctx context.Context, email string) (user *Us
 }
 
 func (u *userMySQLRepo) FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []OwnerDTO, err error) {
-
 	if err := u.db.Table(common.TbNameUsers).Where("id IN (?)", ids).Find(&owners).Error; err != nil {
 		return nil, err
 	}

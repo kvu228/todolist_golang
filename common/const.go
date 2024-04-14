@@ -5,6 +5,7 @@ const (
 	TbNamePosts    = "posts"
 	TbNameUsers    = "users"
 	TbNameSessions = "user_sessions"
+	TbNameImages   = "images"
 
 	//Len of salts
 	LenSalt         = 30

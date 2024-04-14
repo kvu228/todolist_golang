@@ -6,17 +6,36 @@ import (
 	"gorm.io/gorm"
 	"to_do_list/common"
 	"to_do_list/module/post/domain"
+	"to_do_list/module/post/usecase"
 )
+
+type PostRepository interface {
+	PostCmdRepository
+	PostQueryRepository
+}
 
 type postMySQLRepo struct {
 	db *gorm.DB
 }
 
-func NewPostsMySQLRepo(db *gorm.DB) *postMySQLRepo {
+func NewPostsMySQLRepo(db *gorm.DB) PostRepository {
 	return &postMySQLRepo{db: db}
 }
 
-func (repo *postMySQLRepo) FindWithIds(ctx context.Context, ids []uuid.UUID) (posts []domain.PostDTO, err error) {
+func (repo *postMySQLRepo) CreatePost(ctx context.Context, post *domain.Post) error {
+	postDTO := PostDTO{
+		BaseModel: common.BaseModel{
+			Id: post.Id(),
+		},
+		Title:   post.Title(),
+		Body:    post.Body(),
+		Status:  post.Status(),
+		OwnerId: post.OwnerId(),
+	}
+	return repo.db.Table(common.TbNamePosts).Create(&postDTO).Error
+}
+
+func (repo *postMySQLRepo) FindWithIds(ctx context.Context, ids []uuid.UUID) (posts []usecase.PostDTO, err error) {
 	if err := repo.db.Table(common.TbNamePosts).
 		Where("id IN (?)", ids).
 		Find(&posts).Error; err != nil {
@@ -25,7 +44,7 @@ func (repo *postMySQLRepo) FindWithIds(ctx context.Context, ids []uuid.UUID) (po
 	return posts, nil
 }
 
-func (repo *postMySQLRepo) FindWithParams(ctx context.Context, params *domain.ListPostsParams) (posts []domain.PostDTO, err error) {
+func (repo *postMySQLRepo) FindWithParams(ctx context.Context, params *usecase.ListPostsParams) (posts []usecase.PostDTO, err error) {
 	db := repo.db.Table(common.TbNamePosts)
 	if params.OwnerId != "" {
 		db = db.Where("owner_id = ?", params.OwnerId)
@@ -49,4 +68,13 @@ func (repo *postMySQLRepo) FindWithParams(ctx context.Context, params *domain.Li
 		return nil, err
 	}
 	return posts, nil
+}
+
+type PostCmdRepository interface {
+	CreatePost(ctx context.Context, post *domain.Post) error
+}
+
+type PostQueryRepository interface {
+	FindWithIds(ctx context.Context, ids []uuid.UUID) (posts []usecase.PostDTO, err error)
+	FindWithParams(ctx context.Context, params *usecase.ListPostsParams) (posts []usecase.PostDTO, err error)
 }

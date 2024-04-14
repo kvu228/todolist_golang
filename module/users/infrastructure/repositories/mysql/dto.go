@@ -7,15 +7,15 @@ import (
 )
 
 type UserDTO struct {
-	Id        uuid.UUID `gorm:"column:id"`
-	FirstName string    `gorm:"column:first_name"`
-	LastName  string    `gorm:"column:last_name"`
-	Email     string    `gorm:"column:email"`
-	Password  string    `gorm:"column:password"`
-	Salt      string    `gorm:"column:salt"`
-	Avatar    string    `gorm:"column:avatar"`
-	Status    string    `gorm:"column:status"`
-	Role      string    `gorm:"column:role"`
+	Id        uuid.UUID `json:"id" gorm:"column:id"`
+	FirstName string    `json:"first_name" gorm:"column:first_name"`
+	LastName  string    `json:"last_name" gorm:"column:last_name"`
+	Email     string    `json:"email" gorm:"column:email"`
+	Password  string    `json:"password" gorm:"column:password"`
+	Salt      string    `json:"salt" gorm:"column:salt"`
+	Avatar    string    `json:"avatar" gorm:"column:avatar"`
+	Status    string    `json:"status" gorm:"column:status"`
+	Role      string    `json:"role" gorm:"column:role"`
 }
 
 func (dto *UserDTO) ToEntity() (*domain.User, error) {

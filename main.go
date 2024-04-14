@@ -12,7 +12,10 @@ import (
 	components "to_do_list/component"
 	"to_do_list/middlewares"
 	PostMySQLRepo "to_do_list/module/post/infrastructure/repositories/mysql"
+	"to_do_list/module/post/infrastructure/repositories/rgpc_http"
 	PostHTTPService "to_do_list/module/post/infrastructure/services/http"
+	PostCmdUC "to_do_list/module/post/usecase/command"
+	PostQueryUC "to_do_list/module/post/usecase/query"
 	UserMySQLRepo "to_do_list/module/users/infrastructure/repositories/mysql"
 	UserHTTPService "to_do_list/module/users/infrastructure/services/http"
 	UserCmdUC "to_do_list/module/users/usecase/command"
@@ -45,7 +48,11 @@ func main() {
 	UserHTTPService.NewHttpUserService(userQueryUC, userCmdUC).Routes(v1)
 
 	postRepo := PostMySQLRepo.NewPostsMySQLRepo(db)
-	PostHTTPService.NewHttpPostService(postRepo).Routes(v1)
+	urlUserRPC := fmt.Sprintf("%s/query-users-ids", os.Getenv("URL_RPC_USER"))
+	userRPCRepo := rgpc_http.NewRpcGetUsersByIds(urlUserRPC)
+	postQueryUC := PostQueryUC.NewPostQueryUseCase(postRepo, userRPCRepo)
+	postCmdUC := PostCmdUC.NewPostCmdUseCase(postRepo)
+	PostHTTPService.NewHttpPostService(postCmdUC, postQueryUC).SetAuthClient(authClient).Routes(v1)
 
 	server.GET("ping", middlewares.RequireAuth(authClient), func(c *gin.Context) {
 		c.JSON(200, gin.H{

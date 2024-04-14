@@ -1,4 +1,4 @@
-package domain
+package usecase
 
 import (
 	"github.com/google/uuid"
@@ -20,6 +20,13 @@ type PostDTO struct {
 	Owner   OwnerDTO
 }
 
+type NewPostDTO struct {
+	Id      uuid.UUID
+	Title   string
+	Body    string
+	OwnerId uuid.UUID
+}
+
 type ListPostsParams struct {
 	common.Paging
 	ListPostsFilter
@@ -27,16 +34,4 @@ type ListPostsParams struct {
 
 type ListPostsFilter struct {
 	OwnerId string `json:"owner_id"`
-}
-
-func (dto *PostDTO) ToEntity() (*Post, error) {
-	return NewPost(
-		dto.Id,
-		dto.Title,
-		dto.Body,
-		dto.CreatedAt,
-		dto.UpdatedAt,
-		dto.Status,
-		dto.OwnerId,
-	), nil
 }
