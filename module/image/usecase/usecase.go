@@ -8,20 +8,20 @@ import (
 	"to_do_list/module/image/domain"
 )
 
-type UseCase interface {
+type ImageUseCase interface {
 	UploadImage(ctx context.Context, dto UploadDTO) (*domain.Image, error)
 }
 
-type useCase struct {
-	uploader Uploader
-	repo     CmdRepository
+type imageUseCase struct {
+	uploader           Uploader
+	imageCmdRepository ImageCmdRepository
 }
 
-func NewUseCase(uploader Uploader, repo CmdRepository) UseCase {
-	return useCase{uploader: uploader, repo: repo}
+func NewImageUseCase(uploader Uploader, imageCmdRepository ImageCmdRepository) ImageUseCase {
+	return &imageUseCase{uploader: uploader, imageCmdRepository: imageCmdRepository}
 }
 
-func (uc useCase) UploadImage(ctx context.Context, dto UploadDTO) (*domain.Image, error) {
+func (uc *imageUseCase) UploadImage(ctx context.Context, dto UploadDTO) (*domain.Image, error) {
 	dstFileName := fmt.Sprintf("%d_%s", time.Now().UTC().UnixNano(), dto.FileName)
 	if err := uc.uploader.SaveFileUploaded(ctx, dto.FileData, dstFileName); err != nil {
 		return nil, domain.ErrCannotUploadImage
@@ -39,7 +39,7 @@ func (uc useCase) UploadImage(ctx context.Context, dto UploadDTO) (*domain.Image
 		time.Now().UTC(),
 		time.Now().UTC(),
 	)
-	if err := uc.repo.Create(ctx, image); err != nil {
+	if err := uc.imageCmdRepository.Create(ctx, image); err != nil {
 
 		return nil, domain.ErrCannotUploadImage
 	}
@@ -53,6 +53,6 @@ type Uploader interface {
 	GetDomain() string
 }
 
-type CmdRepository interface {
+type ImageCmdRepository interface {
 	Create(ctx context.Context, entity *domain.Image) error
 }

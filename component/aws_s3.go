@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"net/http"
@@ -14,10 +15,10 @@ import (
 type UploadProvider interface {
 	SaveFileUploaded(ctx context.Context, data []byte, dst string) error
 	GetName() string
+	GetDomain() string
 }
 
 type s3Provider struct {
-	id         string
 	bucketName string
 	region     string
 	apiKey     string
@@ -26,10 +27,16 @@ type s3Provider struct {
 	session    *session.Session
 }
 
-func (p *s3Provider) ID() string { return p.id }
-
-func NewAWSS3Provider(id string) *s3Provider {
-	return &s3Provider{id: id}
+func NewAWSS3Provider(bucketName, region, apiKey, secret, domain string) UploadProvider {
+	newSession, _ := session.NewSession(&aws.Config{Region: aws.String(region), Credentials: credentials.NewStaticCredentials(apiKey, secret, "")})
+	return &s3Provider{
+		bucketName: bucketName,
+		region:     region,
+		apiKey:     apiKey,
+		secret:     secret,
+		domain:     domain,
+		session:    newSession,
+	}
 }
 
 func (p *s3Provider) SaveFileUploaded(ctx context.Context, data []byte, dst string) error {

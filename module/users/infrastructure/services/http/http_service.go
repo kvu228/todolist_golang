@@ -9,12 +9,20 @@ import (
 	"to_do_list/module/users/usecase/query"
 )
 
+type HttpUserService interface {
+	getUser() gin.HandlerFunc
+	listUsers() gin.HandlerFunc
+	handleRegister() gin.HandlerFunc
+	handleLogin() gin.HandlerFunc
+	Routes(*gin.RouterGroup)
+}
+
 type httpUserService struct {
 	userQueryUseCase query.UserQueryUseCase
 	userCmdUseCase   command.UserCmdUseCase
 }
 
-func NewHttpUserService(userQueryUseCase query.UserQueryUseCase, userCmdUseCase command.UserCmdUseCase) *httpUserService {
+func NewHttpUserService(userQueryUseCase query.UserQueryUseCase, userCmdUseCase command.UserCmdUseCase) HttpUserService {
 	return &httpUserService{
 		userQueryUseCase: userQueryUseCase,
 		userCmdUseCase:   userCmdUseCase,

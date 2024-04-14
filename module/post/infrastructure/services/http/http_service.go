@@ -10,30 +10,43 @@ import (
 	"to_do_list/module/post/usecase/query"
 )
 
+type HttpPostService interface {
+	handleListPosts() gin.HandlerFunc
+	handleCreatePost() gin.HandlerFunc
+	Routes(g *gin.RouterGroup)
+	SetAuthClient(authClient middlewares.AuthClient) *httpPostService
+}
+
 type httpPostService struct {
 	postQueryUseCase command.PostCmdUseCase
 	postCmdUseCase   query.PostQueryUseCase
 	authClient       middlewares.AuthClient
 }
 
-func NewHttpPostService(postQueryUseCase command.PostCmdUseCase, postCmdUseCase query.PostQueryUseCase) *httpPostService {
+func NewHttpPostService(postQueryUseCase command.PostCmdUseCase, postCmdUseCase query.PostQueryUseCase) HttpPostService {
 	return &httpPostService{postQueryUseCase: postQueryUseCase, postCmdUseCase: postCmdUseCase}
 }
 
 func (s *httpPostService) handleListPosts() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var param usecase.ListPostsParams
-		if err := c.Bind(param); err != nil {
+		if err := c.ShouldBind(&param); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
+		param.Paging.Process()
 
 		result, err := s.postCmdUseCase.ListPosts(c.Request.Context(), &param)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"data": result})
+		c.JSON(http.StatusOK, gin.H{
+			"data":   result,
+			"paging": param.Paging,
+			"filter": param.ListPostsFilter,
+		})
 	}
 }
 

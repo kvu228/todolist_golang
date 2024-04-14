@@ -12,11 +12,15 @@ import (
 	"to_do_list/module/post/usecase"
 )
 
+type UserRPCRepository interface {
+	FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []usecase.OwnerDTO, err error)
+}
+
 type rpcGetUsersByIds struct {
 	url string
 }
 
-func NewRpcGetUsersByIds(url string) *rpcGetUsersByIds {
+func NewRpcGetUsersByIds(url string) UserRPCRepository {
 	return &rpcGetUsersByIds{url: url}
 }
 

@@ -3,20 +3,24 @@ package service
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"to_do_list/module/image/infrastructure/repository/mysql"
 	"to_do_list/module/image/usecase"
 )
 
+type HttpImageService interface {
+	handleUploadImage() gin.HandlerFunc
+	Routes(group *gin.RouterGroup)
+}
+
 type httpService struct {
-	uploader usecase.Uploader
-	repo     mysql.ImageRepository
+	uploader     usecase.Uploader
+	imageUseCase usecase.ImageUseCase
 }
 
-func NewHttpService(uploader usecase.Uploader, repo mysql.ImageRepository) *httpService {
-	return &httpService{uploader: uploader, repo: repo}
+func NewHttpImageService(uploader usecase.Uploader, imageUseCase usecase.ImageUseCase) HttpImageService {
+	return &httpService{uploader: uploader, imageUseCase: imageUseCase}
 }
 
-func (s *httpService) handleUploadIamge() gin.HandlerFunc {
+func (s *httpService) handleUploadImage() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		f, err := c.FormFile("file")
 		if err != nil {
@@ -46,9 +50,8 @@ func (s *httpService) handleUploadIamge() gin.HandlerFunc {
 			FileSize: int(f.Size),
 			FileData: fileData,
 		}
-		uc := usecase.NewUseCase(s.uploader, s.repo)
 
-		image, err := uc.UploadImage(c.Request.Context(), dto)
+		image, err := s.imageUseCase.UploadImage(c.Request.Context(), dto)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -60,6 +63,6 @@ func (s *httpService) handleUploadIamge() gin.HandlerFunc {
 	}
 }
 
-func (s httpService) Routes(group *gin.RouterGroup) {
-	group.POST("/upload-image", s.handleUploadIamge())
+func (s *httpService) Routes(group *gin.RouterGroup) {
+	group.POST("/upload-image", s.handleUploadImage())
 }

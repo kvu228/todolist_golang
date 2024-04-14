@@ -17,7 +17,7 @@ type PostDTO struct {
 	Body    string    `json:"body"`
 	Status  string    `json:"status"`
 	OwnerId uuid.UUID `json:"owner_id"`
-	Owner   OwnerDTO
+	Owner   OwnerDTO  `json:"owner"`
 }
 
 type NewPostDTO struct {
@@ -33,5 +33,5 @@ type ListPostsParams struct {
 }
 
 type ListPostsFilter struct {
-	OwnerId string `json:"owner_id"`
+	OwnerId string `json:"owner_id,omitempty" form:"owner_id"`
 }
