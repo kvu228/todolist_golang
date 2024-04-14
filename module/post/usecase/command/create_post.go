@@ -3,12 +3,11 @@ package command
 import (
 	"context"
 	"to_do_list/common"
-	"to_do_list/module/post/domain"
 	"to_do_list/module/post/usecase"
 )
 
 type CreatePostUseCase interface {
-	CreatePost(ctx context.Context, dto usecase.NewPostDTO) error
+	CreatePost(ctx context.Context, dto *usecase.NewPostDTO) error
 }
 
 type createPostUseCase struct {
@@ -18,14 +17,9 @@ type createPostUseCase struct {
 func NewCreatePostUseCase(postCmdRepository PostCmdRepository) CreatePostUseCase {
 	return &createPostUseCase{postCommandRepository: postCmdRepository}
 }
-func (uc *createPostUseCase) CreatePost(ctx context.Context, dto usecase.NewPostDTO) error {
+func (uc *createPostUseCase) CreatePost(ctx context.Context, dto *usecase.NewPostDTO) error {
 	id, _ := common.GenUUID()
-	postEntity := domain.NewPost(
-		id,
-		dto.Title,
-		dto.Body,
-		"doing",
-		dto.OwnerId,
-	)
+	dto.Id = id
+	postEntity := dto.ToEntity()
 	return uc.postCommandRepository.CreatePost(ctx, postEntity)
 }

@@ -32,10 +32,10 @@ func (uc *loginEmailPasswordUseCase) LoginEmailPassword(ctx context.Context, dto
 	}
 
 	// 2. Hash and compare password
-	if ok := uc.hasher.CheckPassword(user.Salt, dto.Password, user.Password); !ok {
+	if ok := uc.hasher.CheckPassword(user.Salt(), dto.Password, user.Password()); !ok {
 		return nil, domain.ErrInvalidEmailPassword
 	}
-	userId := user.Id
+	userId := user.Id()
 	sessionId, _ := common.GenUUID()
 
 	// 3. Gen JWT Token

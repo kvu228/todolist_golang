@@ -13,7 +13,7 @@ import (
 )
 
 type UserRPCRepository interface {
-	FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []usecase.OwnerDTO, err error)
+	FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []*usecase.OwnerDTO, err error)
 }
 
 type rpcGetUsersByIds struct {
@@ -24,7 +24,7 @@ func NewRpcGetUsersByIds(url string) UserRPCRepository {
 	return &rpcGetUsersByIds{url: url}
 }
 
-func (r *rpcGetUsersByIds) FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []usecase.OwnerDTO, err error) {
+func (r *rpcGetUsersByIds) FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []*usecase.OwnerDTO, err error) {
 	url := r.url
 	method := "POST"
 
@@ -61,7 +61,7 @@ func (r *rpcGetUsersByIds) FindWithIds(ctx context.Context, ids []uuid.UUID) (ow
 	}
 
 	var responseData struct {
-		Data []usecase.OwnerDTO `json:"data"`
+		Data []*usecase.OwnerDTO `json:"data"`
 	}
 
 	if err := json.Unmarshal(body, &responseData); err != nil {

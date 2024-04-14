@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"to_do_list/common"
 	"to_do_list/module/users/domain"
 	"to_do_list/module/users/usecase"
 	"to_do_list/module/users/usecase/query"
@@ -53,4 +54,17 @@ type UserCmdRepository interface {
 
 type SessionCmdRepository interface {
 	Create(ctx context.Context, session *domain.Session) error
+}
+
+type ImageRepository interface {
+	ImageCmdRepository
+	ImageQueryRepository
+}
+
+type ImageCmdRepository interface {
+	SetImageStatusActivated(ctx context.Context, id uuid.UUID) error
+}
+
+type ImageQueryRepository interface {
+	Find(ctx context.Context, id uuid.UUID) (*common.Image, error)
 }

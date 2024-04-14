@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"errors"
+	"time"
 	"to_do_list/common"
 	"to_do_list/module/users/domain"
 	"to_do_list/module/users/usecase"
@@ -49,6 +50,8 @@ func (uc *registerUseCase) Register(ctx context.Context, dto usecase.EmailPasswo
 		"",
 		"activated",
 		"user",
+		time.Now().UTC(),
+		time.Now().UTC(),
 	)
 
 	if err := uc.userCommandRepository.Create(ctx, userEntity); err != nil {

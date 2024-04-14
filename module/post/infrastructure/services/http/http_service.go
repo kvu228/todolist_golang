@@ -61,7 +61,7 @@ func (s *httpPostService) handleCreatePost() gin.HandlerFunc {
 		requester := c.MustGet(common.KeyRequester).(common.Requester)
 		dto.OwnerId = requester.Id()
 
-		if err := s.postQueryUseCase.CreatePost(c.Request.Context(), dto); err != nil {
+		if err := s.postQueryUseCase.CreatePost(c.Request.Context(), &dto); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

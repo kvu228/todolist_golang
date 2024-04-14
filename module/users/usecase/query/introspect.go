@@ -6,7 +6,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"to_do_list/common"
-	"to_do_list/module/users/infrastructure/repositories/mysql"
 )
 
 type TokenParser interface {
@@ -19,11 +18,11 @@ type IntrospectUseCase interface {
 
 type introspectUseCase struct {
 	userQueryRepo    UserQueryRepository
-	sessionQueryRepo mysql.SessionQueryRepository
+	sessionQueryRepo SessionQueryRepository
 	tokenParser      TokenParser
 }
 
-func NewIntrospectUC(userQueryRepo UserQueryRepository, sessionQueryRepo mysql.SessionQueryRepository, tokenParser TokenParser) IntrospectUseCase {
+func NewIntrospectUC(userQueryRepo UserQueryRepository, sessionQueryRepo SessionQueryRepository, tokenParser TokenParser) IntrospectUseCase {
 	return &introspectUseCase{userQueryRepo: userQueryRepo, sessionQueryRepo: sessionQueryRepo, tokenParser: tokenParser}
 }
 
@@ -57,16 +56,16 @@ func (uc *introspectUseCase) IntrospectToken(ctx context.Context, accessToken st
 		return nil, err
 	}
 	// check user status
-	if user.Status == "banned" {
+	if user.Status() == "banned" {
 		return nil, errors.New("user has been banned")
 	}
 	return common.NewRequesterData(
 		userID,
 		sessionID,
-		user.FirstName,
-		user.LastName,
-		user.Email,
-		user.Role,
-		user.Status,
+		user.FirstName(),
+		user.LastName(),
+		user.Email(),
+		user.Role(),
+		user.Status(),
 	), nil
 }

@@ -47,37 +47,43 @@ func (u *userMySQLRepo) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (u *userMySQLRepo) FindById(ctx context.Context, id uuid.UUID) (user *UserDTO, err error) {
-	user = &UserDTO{}
-	if err := u.db.Table(common.TbNameUsers).Where("id = ?", id).First(&user).Error; err != nil {
+func (u *userMySQLRepo) FindById(ctx context.Context, id uuid.UUID) (user *domain.User, err error) {
+	userDTO := &UserDTO{}
+	if err := u.db.Table(common.TbNameUsers).Where("id = ?", id).First(&userDTO).Error; err != nil {
 		return nil, err
 	}
-	return user, nil
+	return userDTO.ToEntity()
 }
 
-func (u *userMySQLRepo) FindByIds(ctx context.Context, ids []uuid.UUID) (uses []*UserDTO, err error) {
-	if err := u.db.Table(common.TbNameUsers).Where("id IN (?)", ids).Find(&uses).Error; err != nil {
+func (u *userMySQLRepo) FindByIds(ctx context.Context, ids []uuid.UUID) (users []*domain.User, err error) {
+	usersDTO := make([]*UserDTO, len(ids))
+	if err := u.db.Table(common.TbNameUsers).Where("id IN (?)", ids).Find(&usersDTO).Error; err != nil {
 		return nil, err
 	}
-	return uses, nil
+	users = make([]*domain.User, len(usersDTO))
+	for index, userDTO := range usersDTO {
+		users[index], _ = userDTO.ToEntity()
+	}
+	return users, nil
 }
 
-func (u *userMySQLRepo) FindByEmail(ctx context.Context, email string) (user *UserDTO, err error) {
-	if err := u.db.Table(common.TbNameUsers).Where("email = ?", email).First(&user).Error; err != nil {
+func (u *userMySQLRepo) FindByEmail(ctx context.Context, email string) (user *domain.User, err error) {
+	userDTO := &UserDTO{}
+	if err := u.db.Table(common.TbNameUsers).Where("email = ?", email).First(userDTO).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, common.ErrRecordNotFound
 		}
 		return nil, err
 	}
-	return user, nil
+	return userDTO.ToEntity()
 }
 
-func (u *userMySQLRepo) FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []OwnerDTO, err error) {
-	if err := u.db.Table(common.TbNameUsers).Where("id IN (?)", ids).Find(&owners).Error; err != nil {
-		return nil, err
-	}
-	return owners, nil
-}
+//func (u *userMySQLRepo) FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []OwnerDTO, err error) {
+//	if err := u.db.Table(common.TbNameUsers).Where("id IN (?)", ids).Find(&owners).Error; err != nil {
+//		return nil, err
+//	}
+//	return owners, nil
+//}
 
 type UserRepository interface {
 	UserCmdRepository
@@ -91,8 +97,8 @@ type UserCmdRepository interface {
 }
 
 type UserQueryRepository interface {
-	FindById(ctx context.Context, id uuid.UUID) (user *UserDTO, err error)
-	FindByIds(ctx context.Context, ids []uuid.UUID) (uses []*UserDTO, err error)
-	FindByEmail(ctx context.Context, email string) (user *UserDTO, err error)
-	FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []OwnerDTO, err error)
+	FindById(ctx context.Context, id uuid.UUID) (user *domain.User, err error)
+	FindByIds(ctx context.Context, ids []uuid.UUID) (uses []*domain.User, err error)
+	FindByEmail(ctx context.Context, email string) (user *domain.User, err error)
+	//FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []OwnerDTO, err error)
 }

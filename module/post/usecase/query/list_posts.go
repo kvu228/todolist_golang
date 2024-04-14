@@ -24,31 +24,38 @@ func NewListPostsQueryUseCase(postQueryRepository PostQueryRepository, userQuery
 
 func (uc *listPostsQueryUseCase) ListPosts(ctx context.Context, param *usecase.ListPostsParams) ([]usecase.PostDTO, error) {
 	// Fetch all post with params
-	posts, err := uc.postQueryRepository.FindWithParams(ctx, param)
+	postEntities, err := uc.postQueryRepository.FindWithParams(ctx, param)
 	if err != nil {
 		return nil, err
 	}
 	// Get the owner_id from those post
-	ownerIds := make([]uuid.UUID, len(posts))
-	for i := range posts {
-		ownerIds[i] = posts[i].OwnerId
+	ownerIds := make([]uuid.UUID, len(postEntities))
+	for i := range postEntities {
+		ownerIds[i] = postEntities[i].OwnerId()
 	}
 
 	// From the ownerIds above fetch data of those users
-	owners, err := uc.userQueryRepository.FindWithIds(ctx, ownerIds)
+	ownerDTOs, err := uc.userQueryRepository.FindWithIds(ctx, ownerIds)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create a map with (key:value) = (uuid:ownerDTO)
-	ownersMap := make(map[uuid.UUID]*usecase.OwnerDTO, len(owners))
-	for i, owner := range owners {
-		ownersMap[owner.Id] = &owners[i]
+	ownersMap := make(map[uuid.UUID]*usecase.OwnerDTO, len(ownerDTOs))
+	for i, owner := range ownerDTOs {
+		ownersMap[owner.Id] = ownerDTOs[i]
 	}
 
-	for i, post := range posts {
-		posts[i].Owner = *ownersMap[post.OwnerId]
+	postDTOs := make([]usecase.PostDTO, len(postEntities))
+	for i, post := range postEntities {
+		postDTOs[i].Id = post.Id()
+		postDTOs[i].Title = post.Title()
+		postDTOs[i].Body = post.Body()
+		postDTOs[i].CreatedAt = post.CreatedAt()
+		postDTOs[i].UpdatedAt = post.UpdatedAt()
+		postDTOs[i].OwnerId = post.OwnerId()
+		postDTOs[i].Owner = *ownersMap[post.OwnerId()]
 	}
 
-	return posts, nil
+	return postDTOs, nil
 }

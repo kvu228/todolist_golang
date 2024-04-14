@@ -16,6 +16,8 @@ type UserDTO struct {
 	Avatar    string    `json:"avatar" gorm:"column:avatar"`
 	Status    string    `json:"status" gorm:"column:status"`
 	Role      string    `json:"role" gorm:"column:role"`
+	CreatedAt time.Time `json:"created_at" gorm:"column:created_at"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"column:updated_at"`
 }
 
 func (dto *UserDTO) ToEntity() (*domain.User, error) {
@@ -29,6 +31,8 @@ func (dto *UserDTO) ToEntity() (*domain.User, error) {
 		dto.Avatar,
 		dto.Status,
 		dto.Role,
+		dto.CreatedAt,
+		dto.UpdatedAt,
 	), nil
 }
 

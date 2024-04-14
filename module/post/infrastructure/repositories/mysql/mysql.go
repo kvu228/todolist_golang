@@ -24,27 +24,33 @@ func NewPostsMySQLRepo(db *gorm.DB) PostRepository {
 
 func (repo *postMySQLRepo) CreatePost(ctx context.Context, post *domain.Post) error {
 	postDTO := PostDTO{
-		BaseModel: common.BaseModel{
-			Id: post.Id(),
-		},
 		Title:   post.Title(),
 		Body:    post.Body(),
-		Status:  post.Status(),
+		Status:  "doing",
 		OwnerId: post.OwnerId(),
 	}
+	postDTO.BaseModel.Id = post.Id()
+	postDTO.CreatedAt = post.CreatedAt()
+	postDTO.UpdatedAt = post.UpdatedAt()
+
 	return repo.db.Table(common.TbNamePosts).Create(&postDTO).Error
 }
 
-func (repo *postMySQLRepo) FindWithIds(ctx context.Context, ids []uuid.UUID) (posts []usecase.PostDTO, err error) {
+func (repo *postMySQLRepo) FindWithIds(ctx context.Context, ids []uuid.UUID) (posts []*domain.Post, err error) {
+	postDTOs := make([]*PostDTO, len(ids))
 	if err := repo.db.Table(common.TbNamePosts).
 		Where("id IN (?)", ids).
-		Find(&posts).Error; err != nil {
+		Find(&postDTOs).Error; err != nil {
 		return nil, err
+	}
+	posts = make([]*domain.Post, len(postDTOs))
+	for i, postDTO := range postDTOs {
+		posts[i], _ = postDTO.ToEntity()
 	}
 	return posts, nil
 }
 
-func (repo *postMySQLRepo) FindWithParams(ctx context.Context, params *usecase.ListPostsParams) (posts []usecase.PostDTO, err error) {
+func (repo *postMySQLRepo) FindWithParams(ctx context.Context, params *usecase.ListPostsParams) (posts []*domain.Post, err error) {
 	db := repo.db.Table(common.TbNamePosts)
 	if params.OwnerId != "" {
 		db = db.Where("owner_id = ?", params.OwnerId)
@@ -61,11 +67,16 @@ func (repo *postMySQLRepo) FindWithParams(ctx context.Context, params *usecase.L
 	params.Process()
 
 	offset := params.Limit * (params.Page - 1)
+	postDTOs := make([]*PostDTO, offset)
 	if err := db.Offset(offset).
 		Limit(params.Limit).
 		Order("id desc").
-		Find(&posts).Error; err != nil {
+		Find(&postDTOs).Error; err != nil {
 		return nil, err
+	}
+	posts = make([]*domain.Post, len(postDTOs))
+	for i, postDTO := range postDTOs {
+		posts[i], _ = postDTO.ToEntity()
 	}
 	return posts, nil
 }
@@ -75,6 +86,6 @@ type PostCmdRepository interface {
 }
 
 type PostQueryRepository interface {
-	FindWithIds(ctx context.Context, ids []uuid.UUID) (posts []usecase.PostDTO, err error)
-	FindWithParams(ctx context.Context, params *usecase.ListPostsParams) (posts []usecase.PostDTO, err error)
+	FindWithIds(ctx context.Context, ids []uuid.UUID) (posts []*domain.Post, err error)
+	FindWithParams(ctx context.Context, params *usecase.ListPostsParams) (posts []*domain.Post, err error)
 }

@@ -3,6 +3,7 @@ package query
 import (
 	"context"
 	"github.com/google/uuid"
+	"to_do_list/module/post/domain"
 	"to_do_list/module/post/usecase"
 )
 
@@ -19,10 +20,10 @@ func NewPostQueryUseCase(postQueryRepository PostQueryRepository, userQueryRepos
 }
 
 type PostQueryRepository interface {
-	FindWithIds(ctx context.Context, ids []uuid.UUID) (posts []usecase.PostDTO, err error)
-	FindWithParams(ctx context.Context, params *usecase.ListPostsParams) (posts []usecase.PostDTO, err error)
+	FindWithIds(ctx context.Context, ids []uuid.UUID) (posts []*domain.Post, err error)
+	FindWithParams(ctx context.Context, params *usecase.ListPostsParams) (posts []*domain.Post, err error)
 }
 
 type UserQueryRepository interface {
-	FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []usecase.OwnerDTO, err error)
+	FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []*usecase.OwnerDTO, err error)
 }

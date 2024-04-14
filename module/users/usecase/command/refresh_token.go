@@ -32,7 +32,7 @@ func (uc *refreshTokenUseCase) RefreshToken(ctx context.Context, refreshToken st
 	if err != nil {
 		return nil, err
 	}
-	// 1.1 Check if refreshtoken is still valid
+	// 1.1 Check if refresh-token is still valid
 	if session.RefreshTokenExpiresAt().UnixNano() < time.Now().UnixNano() {
 		return nil, errors.New("refresh token expired")
 	}
@@ -43,12 +43,12 @@ func (uc *refreshTokenUseCase) RefreshToken(ctx context.Context, refreshToken st
 		return nil, err
 	}
 	// 2.1 check if user banned
-	if user.Status == "banned" {
+	if user.Status() == "banned" {
 		return nil, errors.New("user has been banned")
 	}
 
 	// 3. gen jwt
-	userId := user.Id
+	userId := user.Id()
 	// 3.1 Generate new session ID
 	sessionId, _ := common.GenUUID()
 	accessToken, err := uc.tokenProvider.IssueToken(ctx, sessionId.String(), userId.String())

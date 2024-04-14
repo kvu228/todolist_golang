@@ -2,7 +2,9 @@ package usecase
 
 import (
 	"github.com/google/uuid"
+	"time"
 	"to_do_list/common"
+	"to_do_list/module/post/domain"
 )
 
 type OwnerDTO struct {
@@ -24,7 +26,20 @@ type NewPostDTO struct {
 	Id      uuid.UUID
 	Title   string
 	Body    string
+	Status  string
 	OwnerId uuid.UUID
+}
+
+func (n *NewPostDTO) ToEntity() *domain.Post {
+	return domain.NewPost(
+		n.Id,
+		n.Title,
+		n.Body,
+		n.Status,
+		n.OwnerId,
+		time.Now().UTC(),
+		time.Now().UTC(),
+	)
 }
 
 type ListPostsParams struct {

@@ -2,6 +2,7 @@ package domain
 
 import (
 	"github.com/google/uuid"
+	"time"
 )
 
 type User struct {
@@ -14,10 +15,12 @@ type User struct {
 	avatar    string
 	status    string
 	role      string
+	createdAt time.Time
+	updatedAt time.Time
 }
 
-func NewUser(id uuid.UUID, firstName string, lastName string, email string, password string, salt string, avatar string, status string, role string) *User {
-	return &User{id: id, firstName: firstName, lastName: lastName, email: email, password: password, salt: salt, avatar: avatar, status: status, role: role}
+func NewUser(id uuid.UUID, firstName string, lastName string, email string, password string, salt string, avatar string, status string, role string, createdAt time.Time, updatedAt time.Time) *User {
+	return &User{id: id, firstName: firstName, lastName: lastName, email: email, password: password, salt: salt, avatar: avatar, status: status, role: role, createdAt: createdAt, updatedAt: updatedAt}
 }
 
 func (u *User) Id() uuid.UUID {
@@ -55,6 +58,15 @@ func (u *User) Status() string {
 func (u *User) Role() string {
 	return u.role
 }
+
+func (u *User) CreatedAt() time.Time {
+	return u.createdAt
+}
+
+func (u *User) UpdatedAt() time.Time {
+	return u.updatedAt
+}
+
 func (u *User) ChangeAvatar(ava string) error {
 	u.avatar = ava
 	return nil
