@@ -43,16 +43,14 @@ func main() {
 	expTokenIn, _ := strconv.Atoi(os.Getenv("JWT_EXPIRATION_TIME"))
 	expRefreshTokenIn, _ := strconv.Atoi(os.Getenv("JWT_REFRESH_TOKEN_TIME"))
 
-	// user service
+	// user dependencies
 	tokenProvider := components.NewJWTProvider(secretKey, expTokenIn, expRefreshTokenIn)
 	userRepo := UserMySQLRepo.NewUserMySQLRepo(db)
 	userQueryUC := UserQueryUC.NewUserQueryUseCase(userRepo)
 	sessionRepo := UserMySQLRepo.NewSessionMySQLRepo(db)
 	authClient := UserQueryUC.NewIntrospectUC(userRepo, sessionRepo, tokenProvider)
-	userCmdUC := UserCmdUC.NewUserCmdUseCase(userRepo, sessionRepo, tokenProvider, &common.Hasher{})
-	UserHTTPService.NewHttpUserService(userQueryUC, userCmdUC).Routes(v1)
 
-	// post service
+	// post dependencies
 	postRepo := PostMySQLRepo.NewPostsMySQLRepo(db)
 	urlUserRPC := fmt.Sprintf("%s/query-users-ids", os.Getenv("URL_RPC_USER"))
 	userRPCRepo := rgpc_http.NewRpcGetUsersByIds(urlUserRPC)
@@ -60,7 +58,7 @@ func main() {
 	postCmdUC := PostCmdUC.NewPostCmdUseCase(postRepo)
 	PostHTTPService.NewHttpPostService(postCmdUC, postQueryUC).SetAuthClient(authClient).Routes(v1)
 
-	// image service
+	// image dependencies
 	bucketName := os.Getenv("AWS_S3_BUCKET")
 	region := os.Getenv("AWS_S3_REGION")
 	s3Api := os.Getenv("AWS_S3_API_KEY")
@@ -70,6 +68,9 @@ func main() {
 	imageRepo := ImageMySQLRepo.NewImageMySQLRepo(db)
 	imageUC := ImageUC.NewImageUseCase(s3Uploader, imageRepo)
 	ImageHTTPService.NewHttpImageService(s3Uploader, imageUC).Routes(v1)
+
+	userCmdUC := UserCmdUC.NewUserCmdUseCase(userRepo, sessionRepo, imageRepo, tokenProvider, &common.Hasher{})
+	UserHTTPService.NewHttpUserService(userQueryUC, userCmdUC).SetAuthClient(authClient).Routes(v1)
 
 	server.GET("ping", middlewares.RequireAuth(authClient), func(c *gin.Context) {
 		c.JSON(200, gin.H{

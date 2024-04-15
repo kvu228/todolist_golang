@@ -26,18 +26,22 @@ type Hasher interface {
 type UserCmdUseCase interface {
 	Register(ctx context.Context, dto usecase.EmailPasswordRegistrationDTO) error
 	LoginEmailPassword(ctx context.Context, dto usecase.EmailPasswordLoginDTO) (*usecase.TokenResponseDTO, error)
-	//RefreshToken(ctx context.Context, refreshToken string) (*domain.TokenResponseDTO, error)
+	ChangeAvatar(ctx context.Context, dto usecase.SetSingleImageDTO) error
+	RefreshToken(ctx context.Context, refreshToken string) (*usecase.TokenResponseDTO, error)
 }
 
 type userCmdUseCase struct {
 	RegisterUseCase
 	LoginEmailPasswordUseCase
+	ChangeAvatarUseCase
+	RefreshTokenUseCase
 }
 
-func NewUserCmdUseCase(userRepository UserRepository, sessionCmdRepository SessionCmdRepository, tokenProvider TokenProvider, hasher Hasher) UserCmdUseCase {
+func NewUserCmdUseCase(userRepository UserRepository, sessionCmdRepository SessionCmdRepository, imageRepository ImageRepository, tokenProvider TokenProvider, hasher Hasher) UserCmdUseCase {
 	return &userCmdUseCase{
 		RegisterUseCase:           NewRegisterUseCase(userRepository, userRepository, hasher),
 		LoginEmailPasswordUseCase: NewLoginEmailPasswordUseCase(userRepository, sessionCmdRepository, tokenProvider, hasher),
+		ChangeAvatarUseCase:       NewChangeAvatarUseCase(userRepository, imageRepository),
 	}
 }
 

@@ -2,6 +2,10 @@ package command
 
 import (
 	"context"
+	"log"
+	"to_do_list/common"
+	"to_do_list/common/asyncjob"
+	"to_do_list/common/pubsub"
 	"to_do_list/module/users/usecase"
 )
 
@@ -39,25 +43,24 @@ func (c *changeAvatarUseCase) ChangeAvatar(ctx context.Context, dto usecase.SetS
 		return err
 	}
 
-	//go func() {
-	//	defer common.Recover()
-	//
-	//	ps := ctx.Value(common.CtxWithPubSub).(pubsub.PubSub)
-	//	if err := ps.Publish(ctx, common.ChannelUserChangedAvater, pubsub.NewMessage(
-	//		map[string]interface{}{
-	//			"user_id": dto.Requester.UserId().String(),
-	//			"img_id":  dto.ImageId.String(),
-	//		})); err != nil {
-	//		log.Println(err)
-	//	}
-	//
-	//	//job := asyncjob.NewJob(func(ctx context.Context) error {
-	//	//	return uc.imageRepo.SetImageStatusActivated(ctx, dto.ImageId)
-	//	//}, asyncjob.WithName("SetImageStatus"))
-	//	//
-	//	//asyncjob.NewGroup(true, job).Run(ctx)
-	//
-	//}()
+	go func() {
+		defer common.Recover()
+
+		ps := ctx.Value(common.CtxWithPubSub).(pubsub.PubSub)
+		if err := ps.Publish(ctx, common.ChannelUserChangedAvatar, pubsub.NewMessage(
+			map[string]interface{}{
+				"user_id": dto.Requester.Id().String(),
+				"img_id":  dto.ImageId.String(),
+			})); err != nil {
+			log.Println(err)
+		}
+		job := asyncjob.NewJob(func(ctx context.Context) error {
+			return c.imageRepository.SetImageStatusActivated(ctx, dto.ImageId)
+
+		}, asyncjob.WithName("SetImageStatus"))
+
+		asyncjob.NewGroup(true, job).Run(ctx)
+	}()
 
 	return nil
 }

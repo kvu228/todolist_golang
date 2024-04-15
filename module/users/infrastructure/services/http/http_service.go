@@ -1,9 +1,13 @@
 package http
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
+	"to_do_list/common"
+	"to_do_list/common/pubsub/local"
+	"to_do_list/middlewares"
 	"to_do_list/module/users/usecase"
 	"to_do_list/module/users/usecase/command"
 	"to_do_list/module/users/usecase/query"
@@ -15,11 +19,13 @@ type HttpUserService interface {
 	handleRegister() gin.HandlerFunc
 	handleLogin() gin.HandlerFunc
 	Routes(*gin.RouterGroup)
+	SetAuthClient(ac middlewares.AuthClient) *httpUserService
 }
 
 type httpUserService struct {
 	userQueryUseCase query.UserQueryUseCase
 	userCmdUseCase   command.UserCmdUseCase
+	authClient       middlewares.AuthClient
 }
 
 func NewHttpUserService(userQueryUseCase query.UserQueryUseCase, userCmdUseCase command.UserCmdUseCase) HttpUserService {
@@ -119,9 +125,62 @@ func (s *httpUserService) handleLogin() gin.HandlerFunc {
 	}
 }
 
+func (s *httpUserService) handleRefreshToken() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var bodyData struct {
+			RefreshToken string `json:"refresh_token"`
+		}
+
+		if err := c.BindJSON(&bodyData); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"Error": err.Error(),
+			})
+			return
+		}
+
+		data, err := s.userCmdUseCase.RefreshToken(c.Request.Context(), bodyData.RefreshToken)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"Error": err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"data": data,
+		})
+	}
+}
+
+func (s *httpUserService) handleChangeAvatar() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var dto usecase.SetSingleImageDTO
+
+		if err := c.BindJSON(&dto); err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		dto.Requester = c.MustGet(common.KeyRequester).(common.Requester)
+		if err := s.userCmdUseCase.ChangeAvatar(c.Request.Context(), dto); err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		PubSub := local.NewLocalPubSub("ChangeAvatarPubSub")
+		ctxWithPubSub := context.WithValue(c.Request.Context(), common.CtxWithPubSub, PubSub)
+		if err := s.userCmdUseCase.ChangeAvatar(ctxWithPubSub, dto); err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"data": true,
+		})
+	}
+}
+
 func (s *httpUserService) Routes(g *gin.RouterGroup) {
 	g.POST("/register", s.handleRegister())
 	g.POST("/authenticate", s.handleLogin())
+	g.PATCH("/profile/change-avatar", middlewares.RequireAuth(s.authClient), s.handleChangeAvatar())
 
 	user := g.Group("/user")
 	user.GET("/:id", s.getUser())
@@ -129,4 +188,9 @@ func (s *httpUserService) Routes(g *gin.RouterGroup) {
 
 	rpc := user.Group("/rpc")
 	rpc.POST("/query-users-ids", s.listUsers())
+}
+
+func (s *httpUserService) SetAuthClient(ac middlewares.AuthClient) *httpUserService {
+	s.authClient = ac
+	return s
 }

@@ -13,4 +13,10 @@ const (
 
 	// Keys
 	KeyRequester = "requester"
+
+	// Contexts
+	CtxWithPubSub = "pubsub"
+
+	// Channels
+	ChannelUserChangedAvatar = "UserChangedAvatar"
 )

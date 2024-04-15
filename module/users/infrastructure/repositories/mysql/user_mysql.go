@@ -36,8 +36,22 @@ func (u *userMySQLRepo) Create(ctx context.Context, user *domain.User) error {
 }
 
 func (u *userMySQLRepo) Update(ctx context.Context, user *domain.User) error {
-	//TODO implement me
-	panic("implement me")
+	dto := UserDTO{
+		Id:        user.Id(),
+		FirstName: user.FirstName(),
+		LastName:  user.LastName(),
+		Email:     user.Email(),
+		Password:  user.Password(),
+		Salt:      user.Salt(),
+		Role:      user.Role(),
+		Status:    user.Status(),
+		Avatar:    user.Avatar(),
+	}
+
+	if err := u.db.Table(common.TbNameUsers).Where("id = ?", user.Id()).Updates(&dto).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u *userMySQLRepo) Delete(ctx context.Context, id uuid.UUID) error {
@@ -78,13 +92,6 @@ func (u *userMySQLRepo) FindByEmail(ctx context.Context, email string) (user *do
 	return userDTO.ToEntity()
 }
 
-//func (u *userMySQLRepo) FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []OwnerDTO, err error) {
-//	if err := u.db.Table(common.TbNameUsers).Where("id IN (?)", ids).Find(&owners).Error; err != nil {
-//		return nil, err
-//	}
-//	return owners, nil
-//}
-
 type UserRepository interface {
 	UserCmdRepository
 	UserQueryRepository
@@ -100,5 +107,4 @@ type UserQueryRepository interface {
 	FindById(ctx context.Context, id uuid.UUID) (user *domain.User, err error)
 	FindByIds(ctx context.Context, ids []uuid.UUID) (uses []*domain.User, err error)
 	FindByEmail(ctx context.Context, email string) (user *domain.User, err error)
-	//FindWithIds(ctx context.Context, ids []uuid.UUID) (owners []OwnerDTO, err error)
 }
